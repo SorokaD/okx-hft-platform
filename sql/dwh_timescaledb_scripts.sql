@@ -244,33 +244,6 @@ COMMIT;
 
 
 
-ALTER TABLE okx_raw.orderbook_updates 
-ADD COLUMN IF NOT EXISTS ts_ingest_ms BIGINT;
-
-
-
-UPDATE okx_raw.orderbook_updates 
-SET ts_ingest_ms = ts_event_ms 
-WHERE ts_ingest_ms IS NULL;
-
-SELECT COUNT(*) as null_count 
-FROM okx_raw.orderbook_updates 
-WHERE ts_ingest_ms IS NULL;
-
-
-
-SELECT *
-FROM okx_raw.orderbook_snapshots
-WHERE ts_event_ms >= (extract(epoch from now())*1000)::bigint - 10*60*1000
-ORDER BY ts_event_ms DESC
-LIMIT 200;
-
--- 22.12.25 добавил строки ts_ingest_ms в okx_raw.orderbook_snapshots и okx_raw.orderbook_updates
--- нужно разобраться с null и залить их в okx_core 
- 
-
-
-
 
 
 
