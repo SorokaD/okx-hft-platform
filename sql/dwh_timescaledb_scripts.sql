@@ -185,15 +185,17 @@ CREATE INDEX IF NOT EXISTS idx_trades_instid_ts_event_ms ON okx_raw.trades (inst
 -----------------------------------------------------------------------------------
 -- user creation
 CREATE ROLE user_r LOGIN PASSWORD 'password_r';
-GRANT CONNECT ON DATABASE okx_hft TO superset_r;
-GRANT USAGE ON SCHEMA public, okx_raw, okx_core TO superset_r;
-GRANT SELECT ON ALL TABLES IN SCHEMA public, okx_raw, okx_core TO superset_r;
-GRANT SELECT ON ALL SEQUENCES IN SCHEMA public, okx_raw, okx_core TO superset_r;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO superset_r;
-ALTER DEFAULT PRIVILEGES IN SCHEMA okx_raw GRANT SELECT ON TABLES TO superset_r;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO superset_r;
-ALTER DEFAULT PRIVILEGES IN SCHEMA okx_raw GRANT USAGE, SELECT ON SEQUENCES TO superset_r;
-ALTER DEFAULT PRIVILEGES IN SCHEMA okx_core GRANT USAGE, SELECT ON SEQUENCES TO superset_r;
+GRANT CONNECT ON DATABASE okx_hft TO superset_r, admin;
+GRANT USAGE ON SCHEMA public, okx_raw, okx_core, okx_mart TO superset_r, admin;
+GRANT SELECT ON ALL TABLES IN SCHEMA public, okx_raw, okx_core TO superset_r, admin;
+GRANT SELECT ON ALL SEQUENCES IN SCHEMA public, okx_raw, okx_core TO superset_r, admin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO superset_r, admin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA okx_raw GRANT SELECT ON TABLES TO superset_r, admin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA okx_raw GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA okx_core GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA okx_mart GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin;
+GRANT SELECT ON ALL TABLES IN SCHEMA okx_mart TO superset_r;
 
 GRANT CONNECT ON DATABASE okx_hft TO superset_r;
 GRANT USAGE ON SCHEMA public TO superset_r; -- и на другие схемы тоже, если нужны
