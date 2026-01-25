@@ -265,8 +265,72 @@ SELECT add_retention_policy(
 );
 
 -- core
+SELECT remove_retention_policy('okx_core.fact_funding_rate_event', if_exists => TRUE);
+SELECT remove_retention_policy('okx_core.fact_funding_rate_tick', if_exists => TRUE);
+SELECT remove_retention_policy('okx_core.fact_index_tick', if_exists => TRUE);
+SELECT remove_retention_policy('okx_core.fact_mark_price_tick', if_exists => TRUE);
+SELECT remove_retention_policy('okx_core.fact_open_interest_tick', if_exists => TRUE);
+SELECT remove_retention_policy('okx_core.fact_orderbook_snapshot', if_exists => TRUE);
+SELECT remove_retention_policy('okx_core.fact_orderbook_update', if_exists => TRUE);
+SELECT remove_retention_policy('okx_core.fact_orderbook_update_level', if_exists => TRUE);
+SELECT remove_retention_policy('okx_core.fact_ticker_tick', if_exists => TRUE);
+SELECT remove_retention_policy('okx_core.fact_trades_tick', if_exists => TRUE);
 
-
+SELECT add_retention_policy(
+  'okx_core.etl_state',
+  drop_after => NULL,
+  drop_created_before => INTERVAL '365 days'
+);
+SELECT add_retention_policy(
+  'okx_core.fact_funding_rate_event',
+  drop_after => NULL,
+  drop_created_before => INTERVAL '180 days'
+);
+SELECT add_retention_policy(
+  'okx_core.fact_funding_rate_tick',
+  drop_after => NULL,
+  drop_created_before => INTERVAL '180 days'
+);
+SELECT add_retention_policy(
+  'okx_core.fact_index_tick',
+  drop_after => NULL,
+  drop_created_before => INTERVAL '90 days'
+);
+SELECT add_retention_policy(
+  'okx_core.fact_mark_price_tick',
+  drop_after => NULL,
+  drop_created_before => INTERVAL '90 days'
+);
+SELECT add_retention_policy(
+  'okx_core.fact_open_interest_tick',
+  drop_after => NULL,
+  drop_created_before => INTERVAL '90 days'
+);
+SELECT add_retention_policy(
+  'okx_core.fact_orderbook_snapshot',
+  drop_after => NULL,
+  drop_created_before => INTERVAL '14 days'
+);
+SELECT add_retention_policy(
+  'okx_core.fact_orderbook_update',
+  drop_after => NULL,
+  drop_created_before => INTERVAL '14 days'
+);
+SELECT add_retention_policy(
+  'okx_core.fact_orderbook_update_level',
+  drop_after => NULL,
+  drop_created_before => INTERVAL '14 days'
+);
+SELECT add_retention_policy(
+  'okx_core.fact_ticker_tick',
+  drop_after => NULL,
+  drop_created_before => INTERVAL '30 days'
+);
+SELECT add_retention_policy(
+  'okx_core.fact_trades_tick',
+  drop_after => NULL,
+  drop_created_before => INTERVAL '30 days'
+);
 
 -----------------------------------------------------------------------------------
 -- навесим индексы 
@@ -1062,11 +1126,41 @@ ON CONFLICT DO NOTHING;
 
 
 
-WITH r AS (SELECT max(ts_ingest_ms) raw_last_ms FROM okx_raw.orderbook_updates),
-     c AS (SELECT max(ts_ingest) core_last_ts FROM okx_core.fact_orderbook_update_level)
-SELECT
+WITH r AS (SELECT max(ts_ingest_ms) raw_last_ms FROM okx_raw.tickers),
+     c AS (SELECT max(ts_ingest) core_last_ts FROM okx_core.fact_ticker_tick)
+select
   (to_timestamp(r.raw_last_ms/1000.0) AT TIME ZONE 'UTC')::timestamptz AS raw_last_utc,
   c.core_last_ts AS core_last_utc,
   EXTRACT(EPOCH FROM ((to_timestamp(r.raw_last_ms/1000.0) AT TIME ZONE 'UTC')::timestamptz - c.core_last_ts))::bigint AS lag_seconds
 FROM r,c;
+
+
+
+EXPLAIN (ANALYZE, BUFFERS)
+WITH r AS (SELECT max(ts_ingest_ms) raw_last_ms FROM okx_raw.orderbook_updates),
+     c AS (SELECT max(ts_ingest) core_last_ts FROM okx_core.fact_orderbook_update_level)
+select
+  (to_timestamp(r.raw_last_ms/1000.0) AT TIME ZONE 'UTC')::timestamptz AS raw_last_utc,
+  c.core_last_ts AS core_last_utc,
+  EXTRACT(EPOCH FROM ((to_timestamp(r.raw_last_ms/1000.0) AT TIME ZONE 'UTC')::timestamptz - c.core_last_ts))::bigint AS lag_seconds
+FROM r,c;
+
+
+
+
+
+
+
+
+
+
+
+
+ALTER SYSTEM SET idle_session_timeout = '6h';
+SELECT pg_reload_conf();
+
+
+
+
+
 
