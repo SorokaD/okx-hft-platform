@@ -1062,9 +1062,11 @@ ON CONFLICT DO NOTHING;
 
 
 
-FROM okx_raw.tickers
-WHERE ts_ingest_ms > last
-ORDER BY ts_ingest_ms
-LIMIT 300000
-
+WITH r AS (SELECT max(ts_ingest_ms) raw_last_ms FROM okx_raw.orderbook_updates),
+     c AS (SELECT max(ts_ingest) core_last_ts FROM okx_core.fact_orderbook_update_level)
+SELECT
+  (to_timestamp(r.raw_last_ms/1000.0) AT TIME ZONE 'UTC')::timestamptz AS raw_last_utc,
+  c.core_last_ts AS core_last_utc,
+  EXTRACT(EPOCH FROM ((to_timestamp(r.raw_last_ms/1000.0) AT TIME ZONE 'UTC')::timestamptz - c.core_last_ts))::bigint AS lag_seconds
+FROM r,c;
 
