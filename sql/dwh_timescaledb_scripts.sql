@@ -1062,33 +1062,9 @@ ON CONFLICT DO NOTHING;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+FROM okx_raw.tickers
+WHERE ts_ingest_ms > last
+ORDER BY ts_ingest_ms
+LIMIT 300000
 
 
