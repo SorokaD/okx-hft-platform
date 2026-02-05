@@ -419,3 +419,107 @@ GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO airflow_etl;
 -----------------------------------------------------------------------------------
 
 
+-----------------------------------------------------------------------------------
+-- очистить все
+TRUNCATE table okx_raw.funding_rates RESTART IDENTITY CASCADE;
+TRUNCATE table okx_raw.index_tickers RESTART IDENTITY CASCADE;
+TRUNCATE table okx_raw.mark_prices RESTART IDENTITY CASCADE;
+TRUNCATE table okx_raw.open_interest RESTART IDENTITY CASCADE;
+TRUNCATE table okx_raw.orderbook_snapshots RESTART IDENTITY CASCADE;
+TRUNCATE table okx_raw.orderbook_updates RESTART IDENTITY CASCADE;
+TRUNCATE table okx_raw.tickers RESTART IDENTITY CASCADE;
+TRUNCATE table okx_raw.trades RESTART IDENTITY CASCADE;
+-----------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------
+-- make timezone UTC
+SHOW timezone;         -- посмотреть что сейчас (у тебя, скорее всего, 'Asia/Bishkek' или 'GMT+6')
+ALTER SYSTEM SET timezone = 'UTC';
+SELECT pg_reload_conf();
+
+SELECT current_user;  -- запомни имя
+ALTER ROLE admin SET timezone = 'UTC';
+ALTER DATABASE okx_hft SET timezone = 'UTC';
+
+SELECT current_user, current_database();
+SELECT name, setting, source FROM pg_settings WHERE name = 'TimeZone';
+-----------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------
+-- снос и восстановление мхемы
+BEGIN;
+DROP SCHEMA IF EXISTS okx_core CASCADE;
+CREATE SCHEMA okx_core;
+COMMIT;
+-----------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------
+-- сборка core
+
+-- funding rate
+-- Tick: уникальность по (inst_id, ts_event)
+CREATE UNIQUE INDEX IF NOT EXISTS ux_fact_funding_rate_tick
+ON okx_core.fact_funding_rate_tick (inst_id, ts_event);
+
+-- Event: уникальность по (inst_id, funding_time) == ts_event
+CREATE UNIQUE INDEX IF NOT EXISTS ux_fact_funding_rate_event
+ON okx_core.fact_funding_rate_event (inst_id, ts_event);
+
+
+-----------------------------------------------------------------------------------
+-- truncate
+BEGIN;
+TRUNCATE TABLE
+  okx_raw.index_tickers,
+  okx_raw.mark_prices,
+  okx_raw.funding_rates,
+  okx_raw.open_interest,
+  okx_raw.orderbook_snapshots,
+  okx_raw.orderbook_updates,
+  okx_raw.tickers,
+  okx_raw.trades
+RESTART IDENTITY;
+TRUNCATE TABLE
+  okx_core.fact_index_tick,
+  okx_core.fact_mark_price_tick,
+  okx_core.fact_funding_rate,
+  okx_core.fact_open_interest,
+  okx_core.fact_orderbook_snapshot,
+  okx_core.fact_orderbook_update_level,
+  okx_core.fact_ticker_tick,
+  okx_core.fact_trade
+RESTART IDENTITY;
+COMMIT;
+-----------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------
+-- helper: сначала убрать старые compression policies
+SELECT remove_compression_policy('okx_core.fact_funding_rate_event');
+SELECT remove_compression_policy('okx_core.fact_funding_rate_tick');
+SELECT remove_compression_policy('okx_core.fact_index_tick');
+SELECT remove_compression_policy('okx_core.fact_mark_price_tick');
+SELECT remove_compression_policy('okx_core.fact_open_interest_tick');
+SELECT remove_compression_policy('okx_core.fact_orderbook_snapshot');
+SELECT remove_compression_policy('okx_core.fact_orderbook_update');
+SELECT remove_compression_policy('okx_core.fact_orderbook_update_level');
+SELECT remove_compression_policy('okx_core.fact_ticker_tick');
+SELECT remove_compression_policy('okx_core.fact_trades_tick');
+
+-- затем добавить новые (compress_after 2 days)
+SELECT add_compression_policy('okx_core.fact_funding_rate_event', INTERVAL '2 days');
+SELECT add_compression_policy('okx_core.fact_funding_rate_tick', INTERVAL '2 days');
+SELECT add_compression_policy('okx_core.fact_index_tick', INTERVAL '2 days');
+SELECT add_compression_policy('okx_core.fact_mark_price_tick', INTERVAL '2 days');
+SELECT add_compression_policy('okx_core.fact_open_interest_tick', INTERVAL '2 days');
+SELECT add_compression_policy('okx_core.fact_orderbook_snapshot', INTERVAL '2 days');
+SELECT add_compression_policy('okx_core.fact_orderbook_update', INTERVAL '2 days');
+SELECT add_compression_policy('okx_core.fact_orderbook_update_level', INTERVAL '2 days');
+SELECT add_compression_policy('okx_core.fact_ticker_tick', INTERVAL '2 days');
+SELECT add_compression_policy('okx_core.fact_trades_tick', INTERVAL '2 days');
+
+
+SELECT pid, state, wait_event, query
+FROM pg_stat_activity
+WHERE application_name ILIKE '%airflow%'
+ORDER BY query_start DESC;
+
