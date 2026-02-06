@@ -40,18 +40,18 @@ SELECT
   max(ts_event)
 FROM okx_core.fact_orderbook_l10_snapshot
 UNION ALL
-SELECT
-  'fact_orderbook_snapshot',
-  min(ts_event),
-  max(ts_event)
-FROM okx_core.fact_orderbook_snapshot
-UNION ALL
-SELECT
-  'fact_orderbook_update',
-  min(ts_event),
-  max(ts_event)
-FROM okx_core.fact_orderbook_update
-UNION ALL
+--SELECT
+--  'fact_orderbook_snapshot',
+--  min(ts_event),
+--  max(ts_event)
+--FROM okx_core.fact_orderbook_snapshot
+--UNION ALL
+--SELECT
+--  'fact_orderbook_update',
+--  min(ts_event),
+--  max(ts_event)
+--FROM okx_core.fact_orderbook_update
+--UNION ALL
 SELECT
   'fact_ticker_tick',
   min(ts_event),
