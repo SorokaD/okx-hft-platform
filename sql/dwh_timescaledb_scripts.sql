@@ -379,6 +379,7 @@ GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA okx_raw  TO airflow_etl;
 GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA okx_core TO airflow_etl;
 GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA okx_mart TO airflow_etl;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA okx_raw, okx_core, okx_mart TO airflow_etl;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA okx_mart TO airflow_etl;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA okx_raw
   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO airflow_etl;
@@ -402,6 +403,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA okx_mart
  
  -- разрешить “видеть” схему
 GRANT USAGE ON SCHEMA okx_feat TO airflow_etl;
+GRANT CREATE ON SCHEMA okx_mart to airflow_etl;
 
 -- если DAG только читает/пишет в таблицу:
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA okx_feat TO airflow_etl;
