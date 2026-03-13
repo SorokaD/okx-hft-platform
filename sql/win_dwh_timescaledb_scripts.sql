@@ -355,28 +355,32 @@ CREATE INDEX IF NOT EXISTS idx_ob_updates_ts_event_ms ON okx_raw.orderbook_updat
 -----------------------------------------------------------------------------------
 -- user creation
 --CREATE ROLE user_r LOGIN PASSWORD 'password_r';
-GRANT CONNECT ON DATABASE okx_hft TO superset_r, admin;
-GRANT USAGE ON SCHEMA public, okx_raw, okx_core, okx_mart TO superset_r, admin;
-GRANT SELECT ON ALL TABLES IN SCHEMA public, okx_raw, okx_core TO superset_r, admin;
-GRANT SELECT ON ALL SEQUENCES IN SCHEMA public, okx_raw, okx_core TO superset_r, admin;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO superset_r, admin;
-ALTER DEFAULT PRIVILEGES IN SCHEMA okx_raw GRANT SELECT ON TABLES TO superset_r, admin;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin;
-ALTER DEFAULT PRIVILEGES IN SCHEMA okx_raw GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin;
-ALTER DEFAULT PRIVILEGES IN SCHEMA okx_core GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin;
-ALTER DEFAULT PRIVILEGES IN SCHEMA okx_mart GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin;
+-- CREATE ROLE researcher LOGIN PASSWORD 'a';
+
+
+
+GRANT CONNECT ON DATABASE okx_hft TO superset_r, admin, researcher;
+GRANT USAGE ON SCHEMA public, okx_raw, okx_core, okx_mart TO superset_r, admin, researcher;
+GRANT SELECT ON ALL TABLES IN SCHEMA public, okx_raw, okx_core TO superset_r, admin, researcher;
+GRANT SELECT ON ALL SEQUENCES IN SCHEMA public, okx_raw, okx_core TO superset_r, admin, researcher;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO superset_r, admin, researcher;
+ALTER DEFAULT PRIVILEGES IN SCHEMA okx_raw GRANT SELECT ON TABLES TO superset_r, admin, researcher;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin, researcher;
+ALTER DEFAULT PRIVILEGES IN SCHEMA okx_raw GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin, researcher;
+ALTER DEFAULT PRIVILEGES IN SCHEMA okx_core GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin, researcher;
+ALTER DEFAULT PRIVILEGES IN SCHEMA okx_mart GRANT USAGE, SELECT ON SEQUENCES TO superset_r, admin, researcher;
 GRANT SELECT ON ALL TABLES IN SCHEMA okx_mart TO superset_r;
 
-GRANT CONNECT ON DATABASE okx_hft TO superset_r;
-GRANT USAGE ON SCHEMA public TO superset_r; -- и на другие схемы тоже, если нужны
+GRANT CONNECT ON DATABASE okx_hft TO superset_r, researcher;
+GRANT USAGE ON SCHEMA public TO superset_r, researcher; -- и на другие схемы тоже, если нужны
 -- затем для каждой схемы:
-GRANT USAGE ON SCHEMA okx_core TO superset_r;
-GRANT SELECT ON ALL TABLES IN SCHEMA okx_core TO superset_r;
+GRANT USAGE ON SCHEMA okx_core TO superset_r, researcher;
+GRANT SELECT ON ALL TABLES IN SCHEMA okx_core TO superset_r, researcher;
 
 -- for airflow
 -- CREATE ROLE airflow_etl LOGIN PASSWORD 'airflow_etl' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT;
-GRANT CONNECT, TEMPORARY ON DATABASE okx_hft TO airflow_etl;
-GRANT USAGE ON SCHEMA okx_raw, okx_core, okx_mart TO airflow_etl;
+GRANT CONNECT, TEMPORARY ON DATABASE okx_hft TO airflow_etl, researcher;
+GRANT USAGE ON SCHEMA okx_raw, okx_core, okx_mart TO airflow_etl, researcher;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA okx_raw  TO airflow_etl;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA okx_core TO airflow_etl;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA okx_mart TO airflow_etl;
