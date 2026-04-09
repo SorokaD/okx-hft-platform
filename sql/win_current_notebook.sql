@@ -103,7 +103,7 @@ select
 	to_timestamp(ts_event_ms / 1000.0) at time zone 'UTC' as ts_event_utc
 from okx_raw.orderbook_snapshots
 where instid = 'BTC-USDT-SWAP'
-  and ts_event_ms = 1774173579307
+  and ts_event_ms = 1774176906109
   and level <= 10
 order by side, level;
 
